@@ -52,7 +52,7 @@ export default function Home() {
 				}),
 			});
 			const { output, base } = await res.json();
-			if (res.status !== 200) throw new Error("Something went wrong!");
+
 			setRestoredImage(output);
 			setRestoredBase64(base);
 
