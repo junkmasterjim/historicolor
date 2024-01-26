@@ -18,20 +18,20 @@ import {
 	ArrowUpRightFromSquareIcon,
 	Download,
 	LoaderIcon,
-	Share,
 	UploadIcon,
-	X,
 	XIcon,
 } from "lucide-react";
 import Image from "next/image";
 import { useState, useCallback } from "react";
-import { toast } from "sonner";
+
 import useDownloader from "react-use-downloader";
 import { Separator } from "@/components/ui/separator";
+import { toast } from "sonner";
+
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 export default function Home() {
-	const { size, elapsed, percentage, download, cancel, error, isInProgress } =
-		useDownloader();
+	const { download } = useDownloader();
 
 	const [restoring, setRestoring] = useState<boolean>(false);
 	const [showLabel, setShowLabel] = useState<boolean>(true);
@@ -42,26 +42,80 @@ export default function Home() {
 		string | null | undefined
 	>(null);
 
-	const handleRestore = async (imageUrl: string) => {
+	const [error, setError] = useState<string | null>(null);
+	const [predictionResponse, setPredictionResponse] = useState<any>(null);
+
+	const handleReset = () => {
+		setRestoring(false);
+		setFile(null);
+		setBase64(null);
+		setRestoredImage(null);
+		setRestoredBase64(null);
+		setPredictionResponse(null);
+		setError(null);
+	};
+
+	const handleSubmit = async (imageUrl: string) => {
 		setRestoring(true);
-		try {
-			const res = await fetch("/api/restore", {
-				method: "POST",
-				body: JSON.stringify({
-					input_image: file,
-				}),
-			});
-			const { output, base } = await res.json();
 
-			setRestoredImage(output);
-			setRestoredBase64(base);
+		const response = await fetch("/api/restore", {
+			method: "POST",
+			headers: {
+				"Content-Type": "application/json",
+			},
+			body: JSON.stringify({
+				input_image: imageUrl,
+			}),
+		});
+		let prediction = await response.json();
+		let base = null;
 
-			toast.success("Restored image!");
+		if (response.status !== 201) {
+			setError("Error: " + prediction.detail);
+			// setBase64(null);
 			setRestoring(false);
-		} catch (error) {
-			console.log(error);
+			return;
+		}
+		setError(null);
 
-			toast.error("Something went wrong!");
+		prediction = prediction.prediction;
+
+		setPredictionResponse(prediction);
+
+		while (
+			prediction.status !== "succeeded" &&
+			prediction.status !== "failed"
+		) {
+			await sleep(1000);
+
+			const response = await fetch("/api/restore/" + prediction.id);
+
+			if (response.status !== 200) {
+				setError(prediction.detail);
+				return;
+			}
+
+			const data = await response.json();
+			// console.log(data.prediction);
+			prediction = data.prediction;
+			if (data.base64) {
+				base = data.base64;
+			}
+
+			// console.log(prediction);
+			// console.log(base);
+
+			setPredictionResponse(prediction);
+		}
+		console.log(prediction);
+
+		if (prediction.status === "failed") {
+			setError(prediction.detail);
+			return;
+		}
+		if (prediction.status === "succeeded") {
+			setRestoredImage(prediction.output);
+			setRestoredBase64(base);
 			setRestoring(false);
 		}
 	};
@@ -94,7 +148,7 @@ export default function Home() {
 								content={{
 									uploadIcon: <UploadIcon />,
 									label: "Click or drag to upload",
-									allowedContent: "Only images are allowed (4 MB)",
+									allowedContent: "Only .jpeg/jpg & .png are allowed (4 MB)",
 									button: "Upload",
 								}}
 								endpoint="imageUploader"
@@ -119,10 +173,7 @@ export default function Home() {
 										size={"icon"}
 										variant={"outline"}
 										className="rounded-full scale-80"
-										onClick={() => {
-											setFile(null);
-											setBase64(null);
-										}}
+										onClick={handleReset}
 									>
 										<XIcon className="h-5 w-5" />
 									</Button>
@@ -140,7 +191,7 @@ export default function Home() {
 							</div>
 
 							<div className="self-center">
-								<Button onClick={() => handleRestore(file)}>
+								<Button onClick={() => handleSubmit(file)}>
 									Restore My File
 								</Button>
 							</div>
@@ -154,7 +205,25 @@ export default function Home() {
 							<p className="text-muted-foreground">
 								This usually takes 1 to 2 minutes
 							</p>
+							<Button
+								onClick={() => {
+									handleReset();
+									toast.error("Restoration cancelled");
+								}}
+								variant={"outline"}
+							>
+								Cancel
+							</Button>
 						</>
+					)}
+
+					{error && (
+						<div className="rounded-lg shadow-md p-2 flex flex-col gap-4 justify-center items-center">
+							{error}
+							<Button onClick={handleReset} variant={"outline"}>
+								Upload a new photo
+							</Button>
+						</div>
 					)}
 
 					{restoredImage && restoredBase64 && (
@@ -169,15 +238,7 @@ export default function Home() {
 									OR
 									<Separator />
 								</div>
-								<Button
-									onClick={() => {
-										setBase64(null);
-										setFile(null);
-										setRestoredImage(null);
-										setRestoredBase64(null);
-									}}
-									variant={"outline"}
-								>
+								<Button onClick={handleReset} variant={"outline"}>
 									Upload a new photo
 								</Button>
 							</div>
