@@ -19,8 +19,8 @@ export default function RootLayout({
 	children: React.ReactNode;
 }>) {
 	return (
-		<html lang="en">
-			<body className={(poppins.className, "overflow-hidden")}>
+		<html lang="en" className="scroll-smooth bg-">
+			<body className={poppins.className}>
 				{children}
 				<Toaster position="top-right" />
 			</body>

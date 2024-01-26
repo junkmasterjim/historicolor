@@ -34,3 +34,20 @@ export async function GET(
 		status: 200,
 	});
 }
+
+export async function POST(
+	request: Request,
+	{ params }: { params: { id: string } }
+) {
+	const prediction = await replicate.predictions.cancel(params.id);
+
+	if (prediction?.error) {
+		return new Response(JSON.stringify({ detail: prediction.error.detail }), {
+			status: 500,
+		});
+	}
+
+	return new Response(JSON.stringify({ prediction }), {
+		status: 200,
+	});
+}
