@@ -187,7 +187,7 @@ export default function Home() {
 								onMouseLeave={() => setShowLabel(true)}
 							>
 								<DialogHeader>
-									<DialogTitle>We've restored your image!</DialogTitle>
+									<DialogTitle>We&apos;ve restored your image!</DialogTitle>
 									<DialogDescription>
 										Click the button below to download, or share the before &
 										after!
