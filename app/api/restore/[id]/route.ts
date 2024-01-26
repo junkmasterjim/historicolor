@@ -21,7 +21,7 @@ export async function GET(
 		});
 	}
 
-	console.log("prediction:::", prediction);
+	// console.log("prediction:::", prediction);
 
 	const base64 = await generateBase64(`${prediction?.output}`);
 

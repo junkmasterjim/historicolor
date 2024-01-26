@@ -96,18 +96,19 @@ export default function Home() {
 			}
 
 			const data = await response.json();
-			// console.log(data.prediction);
+
 			prediction = data.prediction;
 			if (data.base64) {
 				base = data.base64;
 			}
-
 			// console.log(prediction);
+			// console.log(predictionResponse?.status);
+
 			// console.log(base);
 
 			setPredictionResponse(prediction);
 		}
-		console.log(prediction);
+		// console.log(prediction);
 
 		if (prediction.status === "failed") {
 			setError(prediction.detail);
@@ -202,9 +203,21 @@ export default function Home() {
 						<>
 							<LoaderIcon className="h-8 w-8 animate-spin" />
 							<p className="font-medium text-2xl">Restoring your image</p>
-							<p className="text-muted-foreground">
+							<p className="text-muted-foreground text-center">
 								This usually takes 1 to 2 minutes
+								<br />
 							</p>
+							<div className="text-sm text-muted-foreground capitalize">
+								{predictionResponse?.status == "starting" && (
+									<p>Status: In Queue</p>
+								)}
+								{predictionResponse?.status == "processing" && (
+									<p>Status: Processing</p>
+								)}
+							</div>
+							<span className="text-xs font-bold text-muted-foreground">
+								Do not refresh the page
+							</span>
 							<Button
 								onClick={() => {
 									handleReset();
