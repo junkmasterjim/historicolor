@@ -6,7 +6,7 @@ import ReactCompareImage from "react-compare-image";
 
 const Hero = () => {
 	return (
-		<section className=" grid gap-2 lg:grid-flow-col min-h-[calc(100svh-3rem)] grid-flow-row lg:grid-cols-7 max-w-screen-xl mx-auto ">
+		<section className=" grid gap-2 lg:grid-flow-col min-h-[calc(100svh-3rem)] grid-flow-row lg:grid-cols-7 max-w-screen-xl mx-auto py-8 ">
 			<div className="p-2 self-center space-y-4 lg:col-span-4">
 				<div className="flex-col space-y-2">
 					<Badge
